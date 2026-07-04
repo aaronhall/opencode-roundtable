@@ -26,7 +26,7 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 | **`task()` with `task_id`** | Resumable persona sessions across turns |
 | **`task(prompt=...)`** | Curated context isolation |
 | **Permission system** | File/directory/model scoping per persona |
-| **File read/write** | `roundtable-minutes.md` as shared conversational memory |
+| **File read/write** | Per-session minutes files as shared conversational memory |
 
 **Zero dependencies, zero compiled code, zero plugins.** The entire system is markdown files + the `/roundtable-sync` prompt command that reads persona definitions and writes agent files.
 
@@ -38,20 +38,20 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 
 1. Create persona definition files in `.opencode/roundtable/personas/`.
 2. Run `/roundtable-sync` to generate the corresponding subagent files.
-3. Start a session with `@meeting`.
+3. Start a session with `@Meeting`.
 
 ### Daily Use
 
 1. Open opencode in the project directory.
-2. Select `@meeting` as the active agent.
+2. Select `@Meeting` as the active agent.
 3. The facilitator reads the persona definitions to know each expert's domain, then discusses with you:
 
    ```
-   @meeting We need to design the auth flow for the API. @architect, what's
+   @Meeting We need to design the auth flow for the API. @architect, what's
    your take on JWT vs session-based?
    ```
 
-4. The facilitator reads `roundtable-minutes.md`, invokes the expert with curated context, relays the response verbatim, and provides synthesis.
+4. The facilitator reads the current minutes file, invokes the expert(s) in parallel with curated context, outputs the curated prompt for visibility, relays each response verbatim, then provides synthesis.
 5. The user asks a follow-up or the facilitator routes an open-ended question to the right expert:
 
    ```
@@ -60,27 +60,27 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
    ```
 
 6. The facilitator invokes `@security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
-7. After each turn, the facilitator appends a structured entry to `roundtable-minutes.md`.
-8. Next session, `roundtable-minutes.md` is on disk — the meeting resumes where it left off, even after compaction.
+7. After each turn, the facilitator delegates minute-writing to the `@scribe` subagent, which handles the file write invisibly.
+8. Next session, the minutes directory is on disk — latest or previous sessions can be resumed.
 
 ### Flow
 
 ```
-User (via @meeting)
+User (via @Meeting)
   │  "What do you think about JWT for our API?"
   ▼
 Orchestrator
-  │  Reads roundtable-minutes.md, reads persona definitions
-  │  Decides which expert to call (or asks user to specify)
-  │  Curates context, invokes task(agent=..., prompt=..., task_id=...)
+  │  Reads current minutes file, reads persona definitions
+  │  Decides which experts to call (or asks user to specify)
+  │  Curates context, outputs prompt, invokes experts in parallel
   ▼
-Expert subagent
-  │  Responds with domain analysis (sees only curated context)
+Expert subagent(s)
+  │  Each responds with domain analysis (sees only curated context)
   ▼
 Orchestrator
-  │  Relays response verbatim to user
+  │  Relays all responses verbatim to user
   │  Provides contextual synthesis
-  │  Appends summary to roundtable-minutes.md
+  │  Delegates minute-writing to @scribe (file write, invisible to user)
 ```
 
 The user drives. The orchestrator routes. Experts speak only when called via `task()`.
@@ -94,36 +94,49 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
 ```
 .opencode/
   agents/
-    meeting.agent.md              # Orchestrator (primary agent)
+    Meeting.md                    # Orchestrator (primary agent)
     architect.md                  # Persona subagent (auto-generated)
+    engineer.md                   # Persona subagent (auto-generated)
+    product-designer.md           # Persona subagent (auto-generated)
+    product-manager.md            # Persona subagent (auto-generated)
+    qa-engineer.md                # Persona subagent (auto-generated)
+    scribe.md                     # Minute-writing subagent (hidden from UI)
     security-expert.md            # Persona subagent (auto-generated)
     ux-designer.md                # Persona subagent (auto-generated)
     ...
   commands/
     roundtable-sync.md            # Prompt command: read personas, write agents
   roundtable/
-    roundtable-minutes.md         # Shared conversational memory
+    minutes/                      # Per-session minutes files (gitignored)
+      2026-07-04-1430.md
+      ...
     subagent-base.md              # Base template all persona agents share
     personas/
       architect.md                # Persona definition (user-authorable)
+      engineer.md                 # Persona definition (user-authorable)
+      product-designer.md         # Persona definition (user-authorable)
+      product-manager.md          # Persona definition (user-authorable)
+      qa-engineer.md              # Persona definition (user-authorable)
+      scribe.md                   # Scribe definition (internal)
       security-expert.md          # Persona definition (user-authorable)
       ux-designer.md              # Persona definition (user-authorable)
       ...
 ```
 
-### Agent: Orchestrator (`meeting.agent.md`)
+### Agent: Orchestrator (`Meeting.md`)
 
 A primary agent (`mode: primary`). Responsibilities:
 
 - Read persona definitions at meeting start to learn each expert's domain.
-- Read `roundtable-minutes.md` before each response.
+- Determine the current minutes file (glob for latest, create new, or ask user).
+- Read the current minutes file before each response.
 - Route user questions to the right expert(s) — by explicit `@mention` or by judging which domain fits.
 - Curate context per invocation (see Context Curation below).
-- Announce each expert call, relay response verbatim, synthesize after all respond.
-- Append structured entries to `roundtable-minutes.md` after every turn.
+- Output the curated prompt for visibility before each subagent invocation.
+- Announce expert calls, relay responses verbatim, synthesize after all respond.
+- Delegate minute-writing to the `@scribe` subagent (hidden, handles file writes invisibly).
+- Invoke multiple independent experts in parallel.
 - **Never** answer domain questions directly, **never** chain experts without user input, **never** pass raw full history to an expert.
-
-Protocol rules are in both the system prompt and `roundtable-minutes.md` for recency-anchored drift resistance.
 
 ### Agent: Persona Subagents (auto-generated by `/roundtable-sync`)
 
@@ -152,25 +165,23 @@ feasibility. You prefer simple solutions and push back on over-engineering.
 
 ## Model
 
-claude-sonnet-4-20250514
+opencode/deepseek-v4-flash-free
 ```
 
-### Session File (`roundtable-minutes.md`)
+### Session Files (`minutes/`)
 
-The shared memory that survives compaction, restart, and model switches.
+Minutes are stored as timestamped files in `.opencode/roundtable/minutes/`. Each session gets its own file, preserving history across meetings.
 
 ```markdown
-# Roundtable Protocol
+# Meeting Session
 
-[Rules the orchestrator reads every turn — duplicated from system prompt]
-
-# Session State
+## Session State
 
 - Date: 2026-07-03
 - Topic: API auth design
 - Participants: @architect, @security-expert
 
-# Conversation Log
+## Conversation Log
 
 ## 2026-07-03 14:00 — Auth approach
 
@@ -188,12 +199,14 @@ The shared memory that survives compaction, restart, and model switches.
 
 The user is always **Leader** in minutes. `task_id`s are stored here so the orchestrator can resume expert sessions after compaction.
 
+The file write is delegated to the `@scribe` subagent (`hidden: true`) — the user never sees file diffs in the UI.
+
 ### Context Curation
 
 When the facilitator calls an expert, `task(prompt=...)` includes:
 
 1. The direct question
-2. Relevant prior statements from that expert (from `roundtable-minutes.md`)
+2. Relevant prior statements from that expert (from the current minutes file)
 3. The topic at hand
 4. Any other expert's statements that are directly relevant to the question
 
@@ -235,10 +248,10 @@ Users override per-persona in `opencode.json` or by editing the agent file direc
 
 | Drift source | Mitigation |
 |---|---|
-| System prompt burial | Protocol rules duplicated in roundtable-minutes.md — read every turn |
-| Compaction loss | All state in roundtable-minutes.md (file, not conversation history) |
+| System prompt burial | Hard Boundaries in system prompt are always present (not in conversation history) |
+| Compaction loss | All state in minutes files (files, not conversation history) |
 | Learning bad patterns | Orchestrator history is just routing — no behavioral examples to mimic |
-| Forgetting task_ids | Stored in roundtable-minutes.md file, survive compaction |
+| Forgetting task_ids | Stored in minutes file, survive compaction |
 | Over-eager routing | Hard Boundaries: never chain without user input |
 
 ---
@@ -246,12 +259,14 @@ Users override per-persona in `opencode.json` or by editing the agent file direc
 ## Status
 
 - **Orchestrator prompt**: written and refined
-- **Base subagent template**: written, stored in `subagent-base.md`
-- **`/roundtable-sync` command**: written as pure prompt
-- **`roundtable-minutes.md` format**: drafted
-- **Example personas**: 4 written (architect, security-expert, ux-designer, qa-engineer)
-- **Permissions model**: defined per persona
-- **Drift resistance**: implemented via duplicate protocol rules + file-based state
+- **Base subagent template**: written, stored in `subagent-base.md`, frames persona as domain expert (not roleplayer)
+- **`/roundtable-sync` command**: written as pure prompt, reads base template + persona definitions, substitutes `{{PERSONA_BODY}}`
+- **Minutes file format**: drafted, per-session timestamped files in `minutes/`
+- **Example personas**: 7 written (architect, security-expert, ux-designer, qa-engineer, engineer, product-manager, product-designer)
+- **Scribe subagent**: created (`hidden: true`) — handles minute-writing invisibly to avoid file diff noise in UI
+- **Parallel invocation**: experts are invoked concurrently when questions are independent
+- **Permissions model**: defined per persona (read-only by default, scribe has edit for file writes)
+- **Default model**: `opencode/deepseek-v4-flash-free` across all agents
 - **Status**: prototype ready for testing
 
 ---
