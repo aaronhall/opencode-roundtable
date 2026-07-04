@@ -106,11 +106,11 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
       roundtable-scribe.md           # Minute-writing subagent (hidden from UI)
     ...
   commands/
-    roundtable-init.md            # Read by agent, delegates to .opencode/roundtable/scripts/roundtable-sync.sh
+    roundtable-init.md            # Read by agent, delegates to .opencode/roundtable/scripts/roundtable-persona-sync.sh
     roundtable-full-response.md   # Utility: replay verbatim responses from last turn
   roundtable/
     scripts/
-      roundtable-sync.sh            # Bash script: deterministic persona generation
+      roundtable-persona-sync.sh            # Bash script: deterministic persona generation
     minutes/                      # Per-session minutes files (gitignored)
       2026-07-04-auth-flow-review.md
       ...
@@ -236,7 +236,7 @@ This is the key isolation mechanism. Each expert's context window stays clean. S
 ### `/roundtable-init` Command
 
 `roundtable-init.md` is a command file that tells the agent to run
-`.opencode/roundtable/scripts/roundtable-sync.sh` — a standalone bash script that does the
+`.opencode/roundtable/scripts/roundtable-persona-sync.sh` — a standalone bash script that does the
 deterministic work of reading persona definitions, substituting the template,
 and writing agent files. Process:
 
@@ -285,7 +285,7 @@ Users override per-persona in `opencode.json` or by editing the agent file direc
 
 - **Orchestrator prompt**: written and refined
 - **Base subagent template**: written, stored in `subagent-base.md`, frames persona as domain expert (not roleplayer)
-- **`/roundtable-init` command**: delegates to `.opencode/roundtable/scripts/roundtable-sync.sh` (bash script, deterministic)
+- **`/roundtable-init` command**: delegates to `.opencode/roundtable/scripts/roundtable-persona-sync.sh` (bash script, deterministic)
 - **`/roundtable-full-response` utility**: replays verbatim responses by name from session history with compaction fallback
 - **Minutes file format**: drafted, per-session timestamped files in `minutes/`
 - **Example personas**: 7 written (architect, security-expert, ux-designer, qa-engineer, engineer, product-manager, product-designer)

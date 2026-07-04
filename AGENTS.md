@@ -13,7 +13,7 @@ Read `docs/Roundtable.md` for full design
 ## Workflow
 
 1. Edit persona source files in `.opencode/roundtable/personas/`
-2. Run `/roundtable-init` — runs `.opencode/roundtable/scripts/roundtable-sync.sh` to regenerate `.opencode/agents/roundtable/*.md`
+2. Run `/roundtable-init` — runs `.opencode/roundtable/scripts/roundtable-persona-sync.sh` to regenerate `.opencode/agents/roundtable/*.md`
 3. Select `@Meeting` to start a session (agent at `.opencode/agents/Meeting.md`)
 4. The facilitator routes to experts via `task()` with curated context
 
@@ -21,7 +21,7 @@ All agents default to model `opencode/deepseek-v4-flash-free`.
 
 ## Key constraints
 
-- `/roundtable-init` runs `.opencode/roundtable/scripts/roundtable-sync.sh` (a bash script, not a prompt command)
+- `/roundtable-init` runs `.opencode/roundtable/scripts/roundtable-persona-sync.sh` (a bash script, not a prompt command)
 - Editing agent files in `.opencode/agents/roundtable/` directly is overwritten on next sync — edit persona sources in `.opencode/roundtable/personas/`
 - Generated persona agents are named `<role>.md` (e.g. `architect.md`, `engineer.md`). Use `@roundtable/architect` etc. when mentioning them.
 - Minutes files are gitignored at `.opencode/roundtable/minutes/` — don't expect them in the working tree
