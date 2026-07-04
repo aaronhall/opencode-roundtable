@@ -1,5 +1,5 @@
 ---
-description: Silent meeting transcriber that appends entries to the minutes file.
+description: Roundtable meeting transcriber that appends entries to the minutes file.
 mode: subagent
 hidden: true
 model: opencode/deepseek-v4-flash-free

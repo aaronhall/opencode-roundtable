@@ -4,7 +4,7 @@ description: Initialize or update persona subagents from roundtable persona defi
 Run `.opencode/roundtable/scripts/roundtable-sync.sh` to generate or update persona agent files from
 the definitions in `.opencode/roundtable/personas/`.
 
-- Reads each persona file (except `scribe.md`, which is handled separately)
+- Reads each persona file (except `roundtable-scribe.md`, which is handled separately)
 - Substitutes the persona body into `.opencode/roundtable/subagent-base.md`
 - Writes the result to `.opencode/agents/roundtable/<name>.md`
 

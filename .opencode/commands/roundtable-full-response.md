@@ -29,5 +29,5 @@ Examples:
 
 - Output verbatim text only — no synthesis, no analysis, no framing.
 - Label each block with the persona name: `**@roundtable/<name>** says:`
-- Do not include scribe responses — only domain expert personas.
-- Do not re-invoke scribe or write to the minutes file for this command.
+- Do not include roundtable-scribe responses — only domain expert personas.
+- Do not re-invoke roundtable-scribe or write to the minutes file for this command.

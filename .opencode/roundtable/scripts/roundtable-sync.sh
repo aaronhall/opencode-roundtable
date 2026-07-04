@@ -25,7 +25,7 @@ for persona_file in "$PERSONA_DIR"/*.md; do
   filename=$(basename "$persona_file" .md)
 
   # Skip infrastructure personas
-  if [ "$filename" = "scribe" ]; then
+  if [ "$filename" = "roundtable-scribe" ]; then
     continue
   fi
 

@@ -60,7 +60,7 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
    ```
 
 6. The facilitator invokes `@roundtable/security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
-7. After each turn, the facilitator delegates minute-writing to the `roundtable/scribe` subagent, which handles the file write invisibly.
+7. After each turn, the facilitator delegates minute-writing to the `roundtable/roundtable-scribe` subagent, which handles the file write invisibly.
 8. Next session, the minutes directory is on disk — latest or previous sessions can be resumed.
 
 ### Flow
@@ -80,7 +80,7 @@ Expert subagent(s)
 Orchestrator
   │  Relays all responses verbatim to user
   │  Provides contextual synthesis
-  │  Delegates minute-writing to roundtable/scribe (file write, invisible to user)
+  │  Delegates minute-writing to roundtable/roundtable-scribe (file write, invisible to user)
 ```
 
 The user drives. The orchestrator routes. Experts speak only when called via `task()`.
@@ -103,7 +103,7 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
       qa-engineer.md              # Persona subagent (auto-generated)
       security-expert.md          # Persona subagent (auto-generated)
       ux-designer.md              # Persona subagent (auto-generated)
-      scribe.md                   # Minute-writing subagent (hidden from UI)
+      roundtable-scribe.md           # Minute-writing subagent (hidden from UI)
     ...
   commands/
     roundtable-init.md            # Read by agent, delegates to .opencode/roundtable/scripts/roundtable-sync.sh
@@ -121,7 +121,7 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
       product-designer.md         # Persona definition (user-authorable)
       product-manager.md          # Persona definition (user-authorable)
       qa-engineer.md              # Persona definition (user-authorable)
-      scribe.md                   # Scribe definition (internal)
+      roundtable-scribe.md           # Scribe definition (internal)
       security-expert.md          # Persona definition (user-authorable)
       ux-designer.md              # Persona definition (user-authorable)
       ...
@@ -138,7 +138,7 @@ A primary agent (`mode: primary`). Responsibilities:
 - Curate context per invocation (see Context Curation below).
 - Output the curated prompt for visibility before each subagent invocation.
 - Announce expert calls, relay responses verbatim, synthesize after all respond.
-- Delegate minute-writing to the `roundtable/scribe` subagent (hidden, handles file writes invisibly).
+- Delegate minute-writing to the `roundtable/roundtable-scribe` subagent (hidden, handles file writes invisibly).
 - Invoke multiple independent experts in parallel.
 - **Never** answer domain questions directly, **never** chain experts without user input, **never** pass raw full history to an expert.
 
@@ -214,7 +214,7 @@ Entry headers use the date portion of the filename with sequential turn numbers:
 
 The user is always **Leader** in minutes. `task_id`s are stored here so the orchestrator can resume expert sessions after compaction.
 
-The file write is delegated to the `roundtable/scribe` subagent (`hidden: true`) — the user never sees file diffs in the UI.
+The file write is delegated to the `roundtable/roundtable-scribe` subagent (`hidden: true`) — the user never sees file diffs in the UI.
 
 ### Context Curation
 
@@ -241,7 +241,7 @@ deterministic work of reading persona definitions, substituting the template,
 and writing agent files. Process:
 
 1. The script reads each persona file in `.opencode/roundtable/personas/`.
-2. For each (except `scribe.md`, handled separately), it reads the file,
+2. For each (except `roundtable-scribe.md`, handled separately), it reads the file,
    extracts the description and optional model hint, strips the `## Model`
    section, substitutes the body into `subagent-base.md`, prepends frontmatter,
     and writes the agent file to `.opencode/agents/roundtable/<name>.md`.
@@ -289,9 +289,9 @@ Users override per-persona in `opencode.json` or by editing the agent file direc
 - **`/roundtable-full-response` utility**: replays verbatim responses by name from session history with compaction fallback
 - **Minutes file format**: drafted, per-session timestamped files in `minutes/`
 - **Example personas**: 7 written (architect, security-expert, ux-designer, qa-engineer, engineer, product-manager, product-designer)
-- **Scribe subagent**: created (`hidden: true`) — handles minute-writing invisibly to avoid file diff noise in UI
+- **Roundtable-scribe subagent**: created (`hidden: true`) — handles minute-writing invisibly to avoid file diff noise in UI
 - **Parallel invocation**: experts are invoked concurrently when questions are independent
-- **Permissions model**: defined per persona (read-only by default, scribe has edit for file writes)
+- **Permissions model**: defined per persona (read-only by default, roundtable-scribe has edit for file writes)
 - **Default model**: `opencode/deepseek-v4-flash-free` across all agents
 - **Status**: prototype ready for testing
 
