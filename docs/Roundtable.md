@@ -6,29 +6,29 @@ Prompt-driven multi-persona orchestration for opencode.
 
 ## Problem
 
-OpenCode conversations are flat — one agent, one context window. When you need multiple perspectives on a design, a security review, or a trade-off analysis, you either:
+opencode conversations are flat — one agent, one context window. When you need multiple perspectives on a design, a security review, or a trade-off analysis, you either:
 
-1. **Hand-roll role-play** in a single session — but context bleeds between roles, the "architect" knows what the "security expert" is about to say, and honest disagreement is impossible.
-2. **Switch between manual sessions** — but each restart loses thread, and there's no shared memory across them.
-3. **Decompose into pipeline stages** (plan → implement → review → QA) — but pipelines are rigid, sequential, and don't support ad-hoc back-and-forth between roles.
+1. **Single-session role-play** — context bleeds between roles, the "architect" knows what the "security expert" is about to say, and honest disagreement is impossible.
+2. **Manual sessions** — each restart loses thread, no shared memory across them.
+3. **Pipeline stages** (plan → implement → review → QA) — rigid and sequential, don't support ad-hoc back-and-forth.
 
-None of these support a **human-led meeting** where the facilitator dynamically calls on personas with curated, isolated context — the same way you'd run a real design review with different specialists at the table.
+None support a **human-led meeting** where the facilitator dynamically calls on domain experts with curated, isolated context — the same way you'd run a real design review.
 
 ---
 
 ## Solution
 
-Roundtable is a prompt-only pattern that wires opencode's existing primitives into a reusable meeting format:
+Roundtable is a prompt-only pattern using opencode's existing primitives:
 
 | Primitive | Role in Roundtable |
 |---|---|
-| **Agent markdown files** (.opencode/agents/*.md) | Define the orchestrator and each persona subagent |
-| **`task()` tool with `task_id`** | Resumable persona sessions that persist across turns |
-| **`task(prompt=...)`** | Curated context isolation — each persona sees only what it needs |
+| **Agent markdown files** (.opencode/agents/*.md) | Orchestrator and persona subagents |
+| **`task()` with `task_id`** | Resumable persona sessions across turns |
+| **`task(prompt=...)`** | Curated context isolation |
 | **Permission system** | File/directory/model scoping per persona |
-| **File read/write** | `roundtable-minutes.md` as the shared conversational memory |
+| **File read/write** | `roundtable-minutes.md` as shared conversational memory |
 
-**Zero dependencies. Zero compiled code. Zero plugins.** The entire system is markdown files + a bootstrap shell script.
+**Zero dependencies, zero compiled code, zero plugins.** The entire system is markdown files + the `/roundtable-sync` prompt command that reads persona definitions and writes agent files.
 
 ---
 
@@ -36,62 +36,54 @@ Roundtable is a prompt-only pattern that wires opencode's existing primitives in
 
 ### Init
 
-```
-cd my-project
-curl -fsSL https://roundtable.example/install | bash
-```
-
-Prompts for persona names, generates agent files. Done in ~5 seconds.
+1. Create persona definition files in `.opencode/roundtable/personas/`.
+2. Run `/roundtable-sync` to generate the corresponding subagent files.
+3. Start a session with `@meeting`.
 
 ### Daily Use
 
 1. Open opencode in the project directory.
-2. Tab-select the `@meeting` orchestrator.
-3. Start the session:
+2. Select `@meeting` as the active agent.
+3. The facilitator reads the persona definitions to know each expert's domain, then discusses with you:
 
    ```
    @meeting We need to design the auth flow for the API. @architect, what's
    your take on JWT vs session-based?
    ```
 
-4. The orchestrator reads `roundtable-minutes.md`, invokes `@architect` with curated
-   context, and returns the response.
-5. The user asks a follow-up or calls on another persona:
+4. The facilitator reads `roundtable-minutes.md`, invokes the expert with curated context, relays the response verbatim, and provides synthesis.
+5. The user asks a follow-up or the facilitator routes an open-ended question to the right expert:
 
    ```
-   @security-expert, @architect proposed JWT with refresh tokens. 
+   @security-expert, @architect proposed JWT with refresh tokens.
    Any concerns?
    ```
 
-6. The orchestrator invokes `@security-expert` — the architect's proposal is
-   in the prompt, but the security expert doesn't see the architect's full
-   conversation history.
-7. The user can loop in more personas, ask for synthesis, or call for a decision.
-8. The orchestrator appends a structured summary to `roundtable-minutes.md` after each
-   round.
-9. On return the next day, `roundtable-minutes.md` is on disk — the meeting resumes
-   where it left off, even after compaction or restart.
+6. The facilitator invokes `@security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
+7. After each turn, the facilitator appends a structured entry to `roundtable-minutes.md`.
+8. Next session, `roundtable-minutes.md` is on disk — the meeting resumes where it left off, even after compaction.
 
 ### Flow
 
 ```
-User (@meeting)
-  │  "@architect, what do you think about JWT?"
+User (via @meeting)
+  │  "What do you think about JWT for our API?"
   ▼
 Orchestrator
-  │  Reads roundtable-minutes.md
-  │  Curates context: topic + architect's prior statements
-  │  Invokes task(agent=architect, prompt=..., task_id=...)
+  │  Reads roundtable-minutes.md, reads persona definitions
+  │  Decides which expert to call (or asks user to specify)
+  │  Curates context, invokes task(agent=..., prompt=..., task_id=...)
   ▼
-Architect subagent
-  │  Responds with analysis (in-character, only sees curated context)
+Expert subagent
+  │  Responds with domain analysis (sees only curated context)
   ▼
 Orchestrator
-  │  Presents response to user
-  │  Appends to roundtable-minutes.md
+  │  Relays response verbatim to user
+  │  Provides contextual synthesis
+  │  Appends summary to roundtable-minutes.md
 ```
 
-The user drives. The orchestrator routes. Personas speak only when called.
+The user drives. The orchestrator routes. Experts speak only when called via `task()`.
 
 ---
 
@@ -102,38 +94,46 @@ The user drives. The orchestrator routes. Personas speak only when called.
 ```
 .opencode/
   agents/
-    meeting.agent.md        # Orchestrator (primary agent)
-    architect.md            # Persona subagent (auto-generated)
-    security-expert.md      # Persona subagent (auto-generated)
-    ux-designer.md          # Persona subagent (auto-generated)
+    meeting.agent.md              # Orchestrator (primary agent)
+    architect.md                  # Persona subagent (auto-generated)
+    security-expert.md            # Persona subagent (auto-generated)
+    ux-designer.md                # Persona subagent (auto-generated)
     ...
+  commands/
+    roundtable-sync.md            # Prompt command: read personas, write agents
   roundtable/
-    roundtable-minutes.md              # Shared conversational memory
+    roundtable-minutes.md         # Shared conversational memory
+    subagent-base.md              # Base template all persona agents share
     personas/
-      architect.md          # Persona definition (user-authorable)
-      security-expert.md    # Persona definition (user-authorable)
-      ux-designer.md        # Persona definition (user-authorable)
+      architect.md                # Persona definition (user-authorable)
+      security-expert.md          # Persona definition (user-authorable)
+      ux-designer.md              # Persona definition (user-authorable)
       ...
 ```
 
 ### Agent: Orchestrator (`meeting.agent.md`)
 
-A primary agent with a deliberately small system prompt. Responsibilities:
+A primary agent (`mode: primary`). Responsibilities:
 
+- Read persona definitions at meeting start to learn each expert's domain.
 - Read `roundtable-minutes.md` before each response.
-- When user `@mentions` a persona, curate context and invoke via `task()`.
-- Never invoke unprompted, never chain personas.
-- Append structured entries to `roundtable-minutes.md` after each round.
+- Route user questions to the right expert(s) — by explicit `@mention` or by judging which domain fits.
+- Curate context per invocation (see Context Curation below).
+- Announce each expert call, relay response verbatim, synthesize after all respond.
+- Append structured entries to `roundtable-minutes.md` after every turn.
+- **Never** answer domain questions directly, **never** chain experts without user input, **never** pass raw full history to an expert.
 
-The protocol rules live in `roundtable-minutes.md`, not the system prompt, creating a recency anchor that resists drift across compaction.
+Protocol rules are in both the system prompt and `roundtable-minutes.md` for recency-anchored drift resistance.
 
-### Agent: Persona Subagents (auto-generated)
+### Agent: Persona Subagents (auto-generated by `/roundtable-sync`)
 
-Each persona is a markdown agent file. The system prompt is assembled from:
+Each persona's agent file is assembled from:
 
-1. **The roundtable protocol wrapper** — explains the persona's role in a meeting context: "You are participating in a design discussion. The facilitator is the user. Respond in character. Only address what you're asked."
-2. **The persona definition** — loaded from `.opencode/roundtable/personas/<name>.md`. This is user-authored and contains the persona's expertise, perspective, tone, and behavioral guardrails.
-3. **Optional model hint** — the persona definition can suggest a specific model (e.g., a cheap model for QA, an expensive one for architecture).
+1. **Frontmatter** — description, mode: subagent, optional model hint, permissions (read-only by default).
+2. **Base template** — loaded from `.opencode/roundtable/subagent-base.md`. Frames the persona as a domain expert, not a roleplayer. Includes the roundtable protocol rules.
+3. **Persona definition** — substituted into the `{{PERSONA_BODY}}` placeholder. User-authored content: expertise, perspective, tone, guardrails.
+
+The assembly is done by the `/roundtable-sync` pure-prompt command (reads the base template, reads each persona file, substitutes, writes agent files — no shell script).
 
 Example persona definition:
 
@@ -162,7 +162,7 @@ The shared memory that survives compaction, restart, and model switches.
 ```markdown
 # Roundtable Protocol
 
-[Rules the orchestrator reads every turn]
+[Rules the orchestrator reads every turn — duplicated from system prompt]
 
 # Session State
 
@@ -174,14 +174,11 @@ The shared memory that survives compaction, restart, and model switches.
 
 ## 2026-07-03 14:00 — Auth approach
 
-- **Facilitator**: Asked about JWT vs session-based auth
+- **Leader**: Asked about JWT vs session-based auth
 - **@architect**: Recommended JWT with refresh tokens, HttpOnly cookies
 - **@security-expert**: Agreed, flagged refresh token rotation storage
-
-## 2026-07-03 14:12 — Token storage
-
-- **Facilitator**: Asked where to store refresh tokens
-- **@security-expert**: Recommended dedicated secrets service, not DB
+- **Synthesis**: Both prefer JWT; key concern is token storage
+- **Decision**: Proceed with JWT, investigate refresh token storage options
 
 # Persona Task IDs
 
@@ -189,43 +186,40 @@ The shared memory that survives compaction, restart, and model switches.
 - security-expert: task_def456
 ```
 
-`task_id`s are stored here so the orchestrator can resume persona sessions after compaction.
+The user is always **Leader** in minutes. `task_id`s are stored here so the orchestrator can resume expert sessions after compaction.
 
 ### Context Curation
 
-When the user says `@architect, what about X?`, the orchestrator's `task(prompt=...)` includes:
+When the facilitator calls an expert, `task(prompt=...)` includes:
 
 1. The direct question
-2. Relevant prior statements from that persona (from `roundtable-minutes.md`)
+2. Relevant prior statements from that expert (from `roundtable-minutes.md`)
 3. The topic at hand
-4. Any other persona's statements that are directly relevant
+4. Any other expert's statements that are directly relevant to the question
 
 It does NOT include:
 - The full conversation history
-- Other personas' unrelated statements
-- Orchestrator routing decisions
+- Other experts' unrelated statements
+- Facilitator routing decisions or reasoning
+- The facilitator's own analysis
 
-This is the key isolation mechanism. Each persona's context window stays clean.
+This is the key isolation mechanism. Each expert's context window stays clean. Subagents are one-shot — they receive a prompt and return a response; no back-and-forth.
 
-### Bootstrap
+### `/roundtable-sync` Command
 
-`roundtable-init.sh` is a ~30-line shell script:
+`roundtable-sync.md` is a pure-prompt command (no shell script). Process:
 
-1. Creates `.opencode/agents/` and `.opencode/roundtable/personas/` if missing
-2. Copies the orchestrator agent file
-3. For each persona definition in `personas/`, generates a subagent markdown file with:
-   - YAML frontmatter (description, mode, model, permissions)
-   - A system prompt that wraps the persona definition with roundtable protocol instructions
-4. Initializes `roundtable-minutes.md` from template
-5. Optionally creates example persona definitions if the directory is empty
+1. Glob for persona files in `.opencode/roundtable/personas/`.
+2. If none exist, tell the user to create some and stop.
+3. Read base template from `.opencode/roundtable/subagent-base.md`.
+4. For each persona file, read it, parse the description and optional model hint, substitute the body into the template, prepend frontmatter, write the agent file.
+5. Report which files were created or updated.
 
 ### Permissions Model
 
-Personas ship with role-appropriate defaults. The YAML frontmatter in each generated agent file declares them:
+Personas ship with role-appropriate defaults in their generated frontmatter:
 
 ```yaml
----
-# Planning persona — read-only by default
 permission:
   read: allow
   glob: allow
@@ -233,54 +227,35 @@ permission:
   edit: deny
   bash: deny
   external_directory: deny
----
 ```
 
-Users override per-persona or globally in `opencode.json`:
-
-```json
-{
-  "agent": {
-    "architect": {
-      "permission": { "edit": "allow", "bash": "allow" }
-    }
-  }
-}
-```
-
-File/directory scoping is supported natively:
-
-```yaml
-permission:
-  edit:
-    "docs/**": allow
-    "src/**": deny
-```
+Users override per-persona in `opencode.json` or by editing the agent file directly.
 
 ### Drift Resistance
 
 | Drift source | Mitigation |
 |---|---|
-| System prompt burial | Protocol rules in roundtable-minutes.md — read every turn |
+| System prompt burial | Protocol rules duplicated in roundtable-minutes.md — read every turn |
 | Compaction loss | All state in roundtable-minutes.md (file, not conversation history) |
 | Learning bad patterns | Orchestrator history is just routing — no behavioral examples to mimic |
-| Forgetting task_ids | Stored in roundtable-minutes.md, survive compaction |
-| Over-eager routing | Tight rules: never invoke unprompted, never chain |
+| Forgetting task_ids | Stored in roundtable-minutes.md file, survive compaction |
+| Over-eager routing | Hard Boundaries: never chain without user input |
 
 ---
 
 ## Status
 
-- **Problem/UX/Implementation**: Designed (this document)
-- **Orchestrator prompt**: Drafted
-- **Persona protocol wrapper**: Not yet written
-- **roundtable-minutes.md format**: Drafted
-- **Bootstrap script**: Not yet written
-- **Example personas**: Not yet written
-- **Prototype**: Not yet started
+- **Orchestrator prompt**: written and refined
+- **Base subagent template**: written, stored in `subagent-base.md`
+- **`/roundtable-sync` command**: written as pure prompt
+- **`roundtable-minutes.md` format**: drafted
+- **Example personas**: 4 written (architect, security-expert, ux-designer, qa-engineer)
+- **Permissions model**: defined per persona
+- **Drift resistance**: implemented via duplicate protocol rules + file-based state
+- **Status**: prototype ready for testing
 
 ---
 
 ## Future: Autonomous Mode
 
-The same infrastructure (roundtable-minutes.md, curated context, persona isolation) can support an autonomous coding mode with a `@director` orchestrator that decomposes tasks, delegates to coding personas, and synthesizes results — without the user driving each turn. The abstraction boundary is clean: only the orchestrator system prompt and persona permissions change.
+The same infrastructure (roundtable-minutes.md, curated context, persona isolation) can support an autonomous coding mode with a `@director` orchestrator that decomposes tasks, delegates to coding personas, and synthesizes results — without the user driving each turn. Only the orchestrator system prompt and persona permissions change.
