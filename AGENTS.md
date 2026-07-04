@@ -13,7 +13,7 @@ Read `docs/Roundtable.md` for full design
 ## Workflow
 
 1. Edit persona source files in `.opencode/roundtable/personas/`
-2. Run `/roundtable-sync` — the agent reads the sync command file (`commands/roundtable-sync.md`) and regenerates `.opencode/agents/persona-*.md`
+2. Run `/roundtable-init` — runs `.opencode/roundtable/scripts/roundtable-sync.sh` to regenerate `.opencode/agents/persona-*.md`
 3. Select `@Meeting` to start a session
 4. The facilitator routes to experts via `task()` with curated context
 
@@ -21,7 +21,7 @@ All agents default to model `opencode/deepseek-v4-flash-free`.
 
 ## Key constraints
 
-- `/roundtable-sync` is a **prompt command** — the agent must read the `.md` file and execute the instructions by hand using read/glob/write tools, not a shell script
+- `/roundtable-init` runs `.opencode/roundtable/scripts/roundtable-sync.sh` (a bash script, not a prompt command)
 - Editing agent files in `.opencode/agents/` directly is overwritten on next sync — edit persona sources in `.opencode/roundtable/personas/`
 - Generated persona agents are named `persona-<role>.md` (e.g. `persona-architect.md`, `persona-engineer.md`). Use `@persona-architect` etc. when mentioning them.
 - Minutes files are gitignored at `.opencode/roundtable/minutes/` — don't expect them in the working tree

@@ -137,7 +137,10 @@ Never include in the prompt:
 
 **NEVER** refer to the user by the label **Leader** in conversation — address them as "you". The "Leader" label is for structured minutes entries only.
 
-**NEVER** run bash commands EXCEPT to find the date timestamp for the minutes filename as instructed. However, do not inject any prompt to subagents about whether or not to run bash commands — they can decide based on their role and permissions.
+**NEVER** run bash commands EXCEPT to find the date timestamp for the minutes
+filename as instructed, or when the user invokes `/roundtable-init`. However,
+do not inject any prompt to subagents about whether or not to run bash commands
+— they can decide based on their role and permissions.
 
 **ALWAYS** relay each expert's response verbatim — the user cannot see task() output.
 
