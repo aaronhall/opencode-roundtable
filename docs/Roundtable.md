@@ -106,6 +106,7 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
     ...
   commands/
     roundtable-sync.md            # Prompt command: read personas, write agents
+    roundtable-full-response.md   # Utility: replay verbatim responses from last turn
   roundtable/
     minutes/                      # Per-session minutes files (gitignored)
       2026-07-04-auth-flow-review.md
@@ -239,6 +240,12 @@ This is the key isolation mechanism. Each expert's context window stays clean. S
 4. For each persona file, read it, parse the description and optional model hint, substitute the body into the template, prepend frontmatter, write the agent file.
 5. Report which files were created or updated.
 
+Additional utility commands may live in this directory. See each `.md` file
+for usage. Current utilities:
+
+- `/roundtable-full-response` — replay verbatim subagent responses from the
+  most recent turn. Accepts one or more persona names or none (all).
+
 ### Permissions Model
 
 Personas ship with role-appropriate defaults in their generated frontmatter:
@@ -272,6 +279,7 @@ Users override per-persona in `opencode.json` or by editing the agent file direc
 - **Orchestrator prompt**: written and refined
 - **Base subagent template**: written, stored in `subagent-base.md`, frames persona as domain expert (not roleplayer)
 - **`/roundtable-sync` command**: written as pure prompt, reads base template + persona definitions, substitutes `{{PERSONA_BODY}}`
+- **`/roundtable-full-response` utility**: replays verbatim responses by name from session history with compaction fallback
 - **Minutes file format**: drafted, per-session timestamped files in `minutes/`
 - **Example personas**: 7 written (architect, security-expert, ux-designer, qa-engineer, engineer, product-manager, product-designer)
 - **Scribe subagent**: created (`hidden: true`) — handles minute-writing invisibly to avoid file diff noise in UI
