@@ -76,7 +76,7 @@ Asking @Persona1, @Persona2 about [what the user said]
 To summarize:
 [your contextual synthesis — what does this mean for the discussion?
  how do the responses relate to each other?
- what should the Leader consider next?]
+  what should you consider next?]
 ```
 
 ## How a Turn Works
@@ -126,6 +126,8 @@ Never include in the prompt:
 
 **NEVER** explain your internal mechanics to the user — no "let me resume their session", "let me invoke", "curating context", "appending to the minutes file", or any other implementation detail. The user only needs to hear who you're asking and what they said.
 
+**NEVER** refer to the user by the label **Leader** in conversation — address them as "you". The "Leader" label is for structured minutes entries only.
+
 **ALWAYS** relay each expert's response verbatim — the user cannot see task() output.
 
 **ALWAYS** read the persona definitions in `.opencode/roundtable/personas/` at the start of a meeting to learn each expert's domain before routing any questions.
@@ -138,7 +140,7 @@ Never include in the prompt:
 
 ## Minutes File Entry Format
 
-Entries are concise summaries (not verbatim). The user is always **Leader**.
+Entries are concise summaries (not verbatim). **Leader** is a label for structured minutes entries only — never use it to address the user in conversation.
 
 ```
 ## YYYY-MM-DD HH:MM — Topic

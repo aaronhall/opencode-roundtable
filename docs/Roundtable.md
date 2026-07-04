@@ -47,7 +47,7 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 3. The facilitator reads the persona definitions to know each expert's domain, then discusses with you:
 
    ```
-   @Meeting We need to design the auth flow for the API. @architect, what's
+   @Meeting We need to design the auth flow for the API. @persona-architect, what's
    your take on JWT vs session-based?
    ```
 
@@ -55,11 +55,11 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 5. The user asks a follow-up or the facilitator routes an open-ended question to the right expert:
 
    ```
-   @security-expert, @architect proposed JWT with refresh tokens.
+   @persona-security-expert, @persona-architect proposed JWT with refresh tokens.
    Any concerns?
    ```
 
-6. The facilitator invokes `@security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
+6. The facilitator invokes `@persona-security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
 7. After each turn, the facilitator delegates minute-writing to the `@scribe` subagent, which handles the file write invisibly.
 8. Next session, the minutes directory is on disk — latest or previous sessions can be resumed.
 
@@ -95,14 +95,14 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
 .opencode/
   agents/
     Meeting.md                    # Orchestrator (primary agent)
-    architect.md                  # Persona subagent (auto-generated)
-    engineer.md                   # Persona subagent (auto-generated)
-    product-designer.md           # Persona subagent (auto-generated)
-    product-manager.md            # Persona subagent (auto-generated)
-    qa-engineer.md                # Persona subagent (auto-generated)
+    persona-architect.md          # Persona subagent (auto-generated)
+    persona-engineer.md           # Persona subagent (auto-generated)
+    persona-product-designer.md   # Persona subagent (auto-generated)
+    persona-product-manager.md    # Persona subagent (auto-generated)
+    persona-qa-engineer.md        # Persona subagent (auto-generated)
+    persona-security-expert.md    # Persona subagent (auto-generated)
+    persona-ux-designer.md        # Persona subagent (auto-generated)
     scribe.md                     # Minute-writing subagent (hidden from UI)
-    security-expert.md            # Persona subagent (auto-generated)
-    ux-designer.md                # Persona subagent (auto-generated)
     ...
   commands/
     roundtable-sync.md            # Prompt command: read personas, write agents
@@ -179,22 +179,22 @@ Minutes are stored as timestamped files in `.opencode/roundtable/minutes/`. Each
 
 - Date: 2026-07-03
 - Topic: API auth design
-- Participants: @architect, @security-expert
+- Participants: @persona-architect, @persona-security-expert
 
 ## Conversation Log
 
 ## 2026-07-03 14:00 — Auth approach
 
 - **Leader**: Asked about JWT vs session-based auth
-- **@architect**: Recommended JWT with refresh tokens, HttpOnly cookies
-- **@security-expert**: Agreed, flagged refresh token rotation storage
+- **@persona-architect**: Recommended JWT with refresh tokens, HttpOnly cookies
+- **@persona-security-expert**: Agreed, flagged refresh token rotation storage
 - **Synthesis**: Both prefer JWT; key concern is token storage
 - **Decision**: Proceed with JWT, investigate refresh token storage options
 
 # Persona Task IDs
 
-- architect: task_abc123
-- security-expert: task_def456
+- persona-architect: task_abc123
+- persona-security-expert: task_def456
 ```
 
 The user is always **Leader** in minutes. `task_id`s are stored here so the orchestrator can resume expert sessions after compaction.

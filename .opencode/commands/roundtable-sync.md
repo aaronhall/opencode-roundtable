@@ -25,9 +25,9 @@ The `## Model` section is metadata — do not include it in the agent body.
 
 ## Output Format
 
-For each persona, generate a file at `.opencode/agents/<filename>.md`. The file
-is composed of frontmatter followed by the subagent base template with the
-persona body substituted in:
+For each persona, generate a file at `.opencode/agents/persona-<filename>.md`.
+The file is composed of frontmatter followed by the subagent base template with
+the persona body substituted in:
 
 1. Read the base template from `.opencode/roundtable/subagent-base.md`
 2. Replace `{{PERSONA_BODY}}` with the persona definition body (excluding `## Model`)
