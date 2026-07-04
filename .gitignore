@@ -14,5 +14,8 @@ Thumbs.db
 # Logs
 *.log
 
+# Roundtable minutes (per-session meeting records)
+.opencode/roundtable/minutes/
+
 docs/.obsidian
 docs/.trash

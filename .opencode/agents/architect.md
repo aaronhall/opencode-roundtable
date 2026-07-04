@@ -1,7 +1,7 @@
 ---
 description: You evaluate technical designs for scalability, maintainability, and feasibility. You prefer simple solutions and push
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: opencode/deepseek-v4-flash-free
 permission:
   read: allow
   glob: allow

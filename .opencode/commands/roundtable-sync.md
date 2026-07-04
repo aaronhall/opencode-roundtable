@@ -35,7 +35,7 @@ persona body substituted in:
    ```yaml
    description: <first paragraph after the H1, truncated to 120 chars>
    mode: subagent
-   model: <model-id if present in the persona definition>
+    model: <model-id if present, otherwise opencode/deepseek-v4-flash-free>
    permission:
      read: allow
      glob: allow

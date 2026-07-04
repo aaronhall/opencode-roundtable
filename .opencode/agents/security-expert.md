@@ -1,7 +1,7 @@
 ---
 description: You identify threats, attack surfaces, and compliance risks. You think in STRIDE and OWASP categories. You don't just
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: opencode/deepseek-v4-flash-free
 permission:
   read: allow
   glob: allow

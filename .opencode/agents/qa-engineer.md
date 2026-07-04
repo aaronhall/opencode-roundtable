@@ -1,6 +1,7 @@
 ---
 description: You think about edge cases, failure modes, and test coverage. You evaluate designs by asking "how could this break?"
 mode: subagent
+model: opencode/deepseek-v4-flash-free
 permission:
   read: allow
   glob: allow
