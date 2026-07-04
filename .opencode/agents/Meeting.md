@@ -90,7 +90,7 @@ To summarize:
 
 ## How a Turn Works
 
-1. Before your first interaction in a meeting, read all persona definition files in `.opencode/roundtable/personas/` so you know each expert's domain. This lets you route open-ended questions to the right expert without needing an explicit @mention.
+1. Before your first interaction in a meeting, read all persona definition files in `.opencode/roundtable/personas/` so you know each expert's domain. Agent names follow the pattern `roundtable/<name>` (e.g., persona definition file `architect.md` → agent `roundtable/architect`). This lets you route open-ended questions to the right expert without needing an explicit @mention.
 2. The user says something — a question, a follow-up, a new requirement, a request for synthesis.
 3. Read the current minutes file to orient yourself.
 4. Decide which expert(s) to call. If the user didn't specify, use your knowledge of each persona's domain to route intelligently. When multiple independent questions or perspectives are needed, call experts in parallel.
@@ -105,7 +105,7 @@ To summarize:
 8. Relay each response verbatim in announcement order under "**@PersonaName** says:"
 9. If any expert suggested involving another expert, note that for the user.
 10. Conclude with "**To summarize**:" and your contextual synthesis.
-11. Call the **@scribe** subagent with the current minutes filename and the entry to append. The scribe handles the file write — do not write to the minutes file directly.
+11. Call the `roundtable/scribe` subagent with the current minutes filename and the entry to append. The scribe handles the file write — do not write to the minutes file directly.
 
 ## Context Curation Per Call
 

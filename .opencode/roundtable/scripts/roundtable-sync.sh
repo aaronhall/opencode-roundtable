@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 PERSONA_DIR="$ROOT/.opencode/roundtable/personas"
-AGENT_DIR="$ROOT/.opencode/agents"
+AGENT_DIR="$ROOT/.opencode/agents/roundtable"
 TEMPLATE_FILE="$ROOT/.opencode/roundtable/subagent-base.md"
 
 if [ ! -d "$PERSONA_DIR" ]; then
@@ -60,7 +60,7 @@ permission:
   external_directory: deny
 ---"
 
-  agent_file="$AGENT_DIR/persona-$filename.md"
+  agent_file="$AGENT_DIR/$filename.md"
   if [ -f "$agent_file" ]; then
     UPDATED+=("$filename")
   else

@@ -22,7 +22,7 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 
 | Primitive | Role in Roundtable |
 |---|---|
-| **Agent markdown files** (.opencode/agents/*.md) | Orchestrator and persona subagents |
+| **Agent markdown files** (.opencode/agents/roundtable/*.md) | Orchestrator and persona subagents |
 | **`task()` with `task_id`** | Resumable persona sessions across turns |
 | **`task(prompt=...)`** | Curated context isolation |
 | **Permission system** | File/directory/model scoping per persona |
@@ -47,7 +47,7 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 3. The facilitator reads the persona definitions to know each expert's domain, then discusses with you:
 
    ```
-   @Meeting We need to design the auth flow for the API. @persona-architect, what's
+   @Meeting We need to design the auth flow for the API. @roundtable/architect, what's
    your take on JWT vs session-based?
    ```
 
@@ -55,12 +55,12 @@ Roundtable is a prompt-only pattern using opencode's existing primitives:
 5. The user asks a follow-up or the facilitator routes an open-ended question to the right expert:
 
    ```
-   @persona-security-expert, @persona-architect proposed JWT with refresh tokens.
+   @roundtable/security-expert, @roundtable/architect proposed JWT with refresh tokens.
    Any concerns?
    ```
 
-6. The facilitator invokes `@persona-security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
-7. After each turn, the facilitator delegates minute-writing to the `@scribe` subagent, which handles the file write invisibly.
+6. The facilitator invokes `@roundtable/security-expert` — architect's proposal is in the prompt, but the security expert doesn't see the architect's full history.
+7. After each turn, the facilitator delegates minute-writing to the `roundtable/scribe` subagent, which handles the file write invisibly.
 8. Next session, the minutes directory is on disk — latest or previous sessions can be resumed.
 
 ### Flow
@@ -80,7 +80,7 @@ Expert subagent(s)
 Orchestrator
   │  Relays all responses verbatim to user
   │  Provides contextual synthesis
-  │  Delegates minute-writing to @scribe (file write, invisible to user)
+  │  Delegates minute-writing to roundtable/scribe (file write, invisible to user)
 ```
 
 The user drives. The orchestrator routes. Experts speak only when called via `task()`.
@@ -95,14 +95,15 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
 .opencode/
   agents/
     Meeting.md                    # Orchestrator (primary agent)
-    persona-architect.md          # Persona subagent (auto-generated)
-    persona-engineer.md           # Persona subagent (auto-generated)
-    persona-product-designer.md   # Persona subagent (auto-generated)
-    persona-product-manager.md    # Persona subagent (auto-generated)
-    persona-qa-engineer.md        # Persona subagent (auto-generated)
-    persona-security-expert.md    # Persona subagent (auto-generated)
-    persona-ux-designer.md        # Persona subagent (auto-generated)
-    scribe.md                     # Minute-writing subagent (hidden from UI)
+    roundtable/
+      architect.md                # Persona subagent (auto-generated)
+      engineer.md                 # Persona subagent (auto-generated)
+      product-designer.md         # Persona subagent (auto-generated)
+      product-manager.md          # Persona subagent (auto-generated)
+      qa-engineer.md              # Persona subagent (auto-generated)
+      security-expert.md          # Persona subagent (auto-generated)
+      ux-designer.md              # Persona subagent (auto-generated)
+      scribe.md                   # Minute-writing subagent (hidden from UI)
     ...
   commands/
     roundtable-init.md            # Read by agent, delegates to .opencode/roundtable/scripts/roundtable-sync.sh
@@ -126,7 +127,7 @@ The user drives. The orchestrator routes. Experts speak only when called via `ta
       ...
 ```
 
-### Agent: Orchestrator (`Meeting.md`)
+### Agent: Orchestrator (`agents/Meeting.md`)
 
 A primary agent (`mode: primary`). Responsibilities:
 
@@ -137,7 +138,7 @@ A primary agent (`mode: primary`). Responsibilities:
 - Curate context per invocation (see Context Curation below).
 - Output the curated prompt for visibility before each subagent invocation.
 - Announce expert calls, relay responses verbatim, synthesize after all respond.
-- Delegate minute-writing to the `@scribe` subagent (hidden, handles file writes invisibly).
+- Delegate minute-writing to the `roundtable/scribe` subagent (hidden, handles file writes invisibly).
 - Invoke multiple independent experts in parallel.
 - **Never** answer domain questions directly, **never** chain experts without user input, **never** pass raw full history to an expert.
 
@@ -193,27 +194,27 @@ Entry headers use the date portion of the filename with sequential turn numbers:
 ## Session State
 
 - Topic: API auth design
-- Participants: @persona-architect, @persona-security-expert
+- Participants: @roundtable/architect, @roundtable/security-expert
 
 ## Conversation Log
 
 ## 2026-07-04 Turn 1 — Auth approach
 
 - **Leader**: Asked about JWT vs session-based auth
-- **@persona-architect**: Recommended JWT with refresh tokens, HttpOnly cookies
-- **@persona-security-expert**: Agreed, flagged refresh token rotation storage
+- **@roundtable/architect**: Recommended JWT with refresh tokens, HttpOnly cookies
+- **@roundtable/security-expert**: Agreed, flagged refresh token rotation storage
 - **Synthesis**: Both prefer JWT; key concern is token storage
 - **Decision**: Proceed with JWT, investigate refresh token rotation storage
 
 # Persona Task IDs
 
-- persona-architect: task_abc123
-- persona-security-expert: task_def456
+- architect: task_abc123
+- security-expert: task_def456
 ```
 
 The user is always **Leader** in minutes. `task_id`s are stored here so the orchestrator can resume expert sessions after compaction.
 
-The file write is delegated to the `@scribe` subagent (`hidden: true`) — the user never sees file diffs in the UI.
+The file write is delegated to the `roundtable/scribe` subagent (`hidden: true`) — the user never sees file diffs in the UI.
 
 ### Context Curation
 
@@ -243,7 +244,7 @@ and writing agent files. Process:
 2. For each (except `scribe.md`, handled separately), it reads the file,
    extracts the description and optional model hint, strips the `## Model`
    section, substitutes the body into `subagent-base.md`, prepends frontmatter,
-   and writes the agent file.
+    and writes the agent file to `.opencode/agents/roundtable/<name>.md`.
 3. Reports which files were created or updated.
 
 Additional utility commands may live in this directory. See each `.md` file

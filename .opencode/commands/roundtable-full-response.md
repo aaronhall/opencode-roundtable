@@ -11,8 +11,8 @@ only — do not route them as invocation requests.
 Examples:
 
 - `/roundtable-full-response` — all personas from last turn
-- `/roundtable-full-response @persona-architect` — just the architect
-- `/roundtable-full-response persona-architect @persona-security-expert` — works either way
+- `/roundtable-full-response @roundtable/architect` — just the architect
+- `/roundtable-full-response architect @roundtable/security-expert` — works either way
 
 ## Behavior
 
@@ -28,6 +28,6 @@ Examples:
 ## Rules
 
 - Output verbatim text only — no synthesis, no analysis, no framing.
-- Label each block with the persona name: `**@persona-name** says:`
+- Label each block with the persona name: `**@roundtable/<name>** says:`
 - Do not include scribe responses — only domain expert personas.
 - Do not re-invoke scribe or write to the minutes file for this command.
