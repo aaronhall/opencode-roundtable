@@ -1,3 +1,6 @@
+/docs/
+AGENTS.md
+
 # OS
 .DS_Store
 Thumbs.db
@@ -17,5 +20,3 @@ Thumbs.db
 # Roundtable minutes (per-session meeting records)
 .opencode/roundtable/minutes/
 
-docs/.obsidian
-docs/.trash
