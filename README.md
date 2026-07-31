@@ -1,6 +1,7 @@
 # Roundtable
 
 **Prompt-driven multi-persona orchestration for opencode.** Adversarial guidance without context bloat.
+
 ---
 
 ## Problem
