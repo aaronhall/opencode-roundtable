@@ -1,8 +1,6 @@
 # Roundtable
 
-**Prompt-driven multi-persona orchestration for opencode.** (An experimental
-context window manager in Opencode)
-
+**Prompt-driven multi-persona orchestration for opencode.** Adversarial guidance without context bloat.
 ---
 
 ## Problem
